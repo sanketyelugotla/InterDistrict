@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Phone, MapPin, Building, Download, Search, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Phone, MapPin, Building, Download, Search, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useMemo } from "react"
 
@@ -43,7 +44,7 @@ const buttonVariants = {
 
 export default function MembersTable({
     members,           // Current page members
-    allMembers,        // Add this prop - all members in the dataset
+    allMembers,        // All members in the dataset
     loading,
     currentPage,
     totalPages,
@@ -51,43 +52,79 @@ export default function MembersTable({
     onPageChange
 }) {
     const [searchQuery, setSearchQuery] = useState("")
+    const [designationFilter, setDesignationFilter] = useState(undefined)
+    const [managementFilter, setManagementFilter] = useState(undefined)
 
-    // Filter members based on search query across all fields
+    // Get unique designations and managements for filter options
+    const designations = useMemo(() => {
+        const uniqueDesignations = new Set(allMembers.map(member => member.designation).filter(Boolean))
+        return Array.from(uniqueDesignations).sort()
+    }, [allMembers])
+
+    const managements = useMemo(() => {
+        const uniqueManagements = new Set(allMembers.map(member => member.management).filter(Boolean))
+        return Array.from(uniqueManagements).sort()
+    }, [allMembers])
+
+    // Filter members based on search query and filters
     const filteredMembers = useMemo(() => {
-        if (!searchQuery) return members
+        let filtered = members
 
-        const query = searchQuery.toLowerCase().trim()
-        return members.filter(member =>
-            member.name?.toLowerCase().includes(query) ||
-            member.designation?.toLowerCase().includes(query) ||
-            member.workingPlace?.toLowerCase().includes(query) ||
-            member.workingDistrict?.toLowerCase().includes(query) ||
-            member.willingDistrict?.toLowerCase().includes(query) ||
-            member.mobileNumber?.includes(query) ||
-            member.management?.toLowerCase().includes(query)
-        )
-    }, [members, searchQuery])
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase().trim()
+            filtered = filtered.filter(member =>
+                member.name?.toLowerCase().includes(query) ||
+                member.designation?.toLowerCase().includes(query) ||
+                member.workingPlace?.toLowerCase().includes(query) ||
+                member.workingDistrict?.toLowerCase().includes(query) ||
+                member.willingDistrict?.toLowerCase().includes(query) ||
+                member.mobileNumber?.includes(query) ||
+                member.management?.toLowerCase().includes(query)
+            )
+        }
 
-    // Filter all members for export when search is active
+        if (designationFilter) {
+            filtered = filtered.filter(member => member.designation === designationFilter)
+        }
+
+        if (managementFilter) {
+            filtered = filtered.filter(member => member.management === managementFilter)
+        }
+
+        return filtered
+    }, [members, searchQuery, designationFilter, managementFilter])
+
+    // Filter all members for export when search or filters are active
     const filteredAllMembers = useMemo(() => {
-        if (!searchQuery) return allMembers
+        let filtered = allMembers
 
-        const query = searchQuery.toLowerCase().trim()
-        return allMembers.filter(member =>
-            member.name?.toLowerCase().includes(query) ||
-            member.designation?.toLowerCase().includes(query) ||
-            member.workingPlace?.toLowerCase().includes(query) ||
-            member.workingDistrict?.toLowerCase().includes(query) ||
-            member.willingDistrict?.toLowerCase().includes(query) ||
-            member.mobileNumber?.includes(query) ||
-            member.management?.toLowerCase().includes(query)
-        )
-    }, [allMembers, searchQuery])
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase().trim()
+            filtered = filtered.filter(member =>
+                member.name?.toLowerCase().includes(query) ||
+                member.designation?.toLowerCase().includes(query) ||
+                member.workingPlace?.toLowerCase().includes(query) ||
+                member.workingDistrict?.toLowerCase().includes(query) ||
+                member.willingDistrict?.toLowerCase().includes(query) ||
+                member.mobileNumber?.includes(query) ||
+                member.management?.toLowerCase().includes(query)
+            )
+        }
+
+        if (designationFilter) {
+            filtered = filtered.filter(member => member.designation === designationFilter)
+        }
+
+        if (managementFilter) {
+            filtered = filtered.filter(member => member.management === managementFilter)
+        }
+
+        return filtered
+    }, [allMembers, searchQuery, designationFilter, managementFilter])
 
     const downloadExcel = () => {
         import("xlsx")
             .then((XLSX) => {
-                // Use filteredAllMembers for export (all data matching search)
                 const exportData = filteredAllMembers.map((member) => ({
                     Name: member.name,
                     Designation: member.designation,
@@ -125,7 +162,14 @@ export default function MembersTable({
             })
     }
 
-    const clearSearch = () => setSearchQuery("")
+    const clearAllFilters = () => {
+        setSearchQuery("")
+        setDesignationFilter(undefined)
+        setManagementFilter(undefined)
+    }
+
+    // Check if any filters are active
+    const hasActiveFilters = searchQuery || designationFilter || managementFilter
 
     // Generate page numbers for pagination
     const getPageNumbers = () => {
@@ -217,7 +261,7 @@ export default function MembersTable({
 
                                 {searchQuery && (
                                     <button
-                                        onClick={clearSearch}
+                                        onClick={() => setSearchQuery("")}
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         <X className="h-4 w-4" />
@@ -244,6 +288,55 @@ export default function MembersTable({
                             )}
                         </div>
                     </div>
+
+                    {/* Filter Controls */}
+                    <div className="flex flex-col sm:flex-row gap-4 mt-4 items-start">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Filter className="h-4 w-4" />
+                            <span>Filter by:</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
+                            <Select value={designationFilter} onValueChange={setDesignationFilter}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Designation" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={undefined}>All Designations</SelectItem>
+                                    {designations.map((designation) => (
+                                        <SelectItem key={designation} value={designation}>
+                                            {designation}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={managementFilter} onValueChange={setManagementFilter}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Management" className="placeholder:text-gray-600"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={undefined}>All Managements</SelectItem>
+                                    {managements.map((management) => (
+                                        <SelectItem key={management} value={management}>
+                                            {management}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {hasActiveFilters && (
+                                <Button
+                                    variant="outline"
+                                    onClick={clearAllFilters}
+                                    className="flex items-center gap-2"
+                                >
+                                    <X className="h-4 w-4" />
+                                    Clear Filters
+                                </Button>
+                            )}
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <AnimatePresence mode="wait">
@@ -256,20 +349,20 @@ export default function MembersTable({
                                 transition={{ duration: 0.2 }}
                                 className="text-center py-8 text-muted-foreground"
                             >
-                                {searchQuery ? (
+                                {hasActiveFilters ? (
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
                                             <Search className="h-6 w-6" />
                                         </div>
                                         <p className="font-medium">No matches found</p>
-                                        <p className="text-sm">No members match &quot;{searchQuery}&quot;</p>
+                                        <p className="text-sm">No members match your filters</p>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={clearSearch}
+                                            onClick={clearAllFilters}
                                             className="mt-2"
                                         >
-                                            Clear search
+                                            Clear all filters
                                         </Button>
                                     </div>
                                 ) : (
@@ -291,26 +384,54 @@ export default function MembersTable({
                                 transition={{ duration: 0.2 }}
                                 className="overflow-x-auto"
                             >
-                                {/* Search Results Info */}
-                                {searchQuery && (
+                                {/* Active Filters Info */}
+                                {hasActiveFilters && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="mb-4 flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                                        className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-lg gap-2"
                                     >
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Search className="h-4 w-4 text-muted-foreground" />
-                                            <span>
-                                                Showing {filteredMembers.length} results for &quot;{searchQuery}&quot;
-                                            </span>
+                                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                                            <Filter className="h-4 w-4 text-muted-foreground" />
+                                            <span>Active filters:</span>
+
+                                            {searchQuery && (
+                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                    Search: {searchQuery}
+                                                    <X
+                                                        className="h-3 w-3 cursor-pointer"
+                                                        onClick={() => setSearchQuery("")}
+                                                    />
+                                                </Badge>
+                                            )}
+
+                                            {designationFilter && (
+                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                    Designation: {designationFilter}
+                                                    <X
+                                                        className="h-3 w-3 cursor-pointer"
+                                                        onClick={() => setDesignationFilter(undefined)}
+                                                    />
+                                                </Badge>
+                                            )}
+
+                                            {managementFilter && (
+                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                    Management: {managementFilter}
+                                                    <X
+                                                        className="h-3 w-3 cursor-pointer"
+                                                        onClick={() => setManagementFilter(undefined)}
+                                                    />
+                                                </Badge>
+                                            )}
                                         </div>
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={clearSearch}
-                                            className="h-8 px-2"
+                                            onClick={clearAllFilters}
+                                            className="h-8 px-2 self-end sm:self-auto"
                                         >
-                                            Clear
+                                            Clear all
                                         </Button>
                                     </motion.div>
                                 )}

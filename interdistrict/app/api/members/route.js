@@ -34,7 +34,7 @@ export async function GET(request) {
         const workingDistrict = searchParams.get("willingDistrict")
 
         const page = parseInt(searchParams.get("page") || "1", 10)
-        const limit = parseInt(searchParams.get("limit") || "100", 10)
+        const limit = parseInt(searchParams.get("limit") || "50", 10)
         const skip = (page - 1) * limit
 
         // Build query based on provided filters
@@ -47,18 +47,18 @@ export async function GET(request) {
         }
 
         // If no filters are provided, return empty result
-        if (Object.keys(query).length === 0) {
-            return NextResponse.json({
-                success: true,
-                data: [],
-                pagination: {
-                    total: 0,
-                    page,
-                    limit,
-                    totalPages: 0,
-                },
-            })
-        }
+        // if (Object.keys(query).length === 0) {
+        //     return NextResponse.json({
+        //         success: true,
+        //         data: [],
+        //         pagination: {
+        //             total: 0,
+        //             page,
+        //             limit,
+        //             totalPages: 0,
+        //         },
+        //     })
+        // }
 
         const members = await db
             .collection("members")
