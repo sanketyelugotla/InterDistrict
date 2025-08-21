@@ -1,0 +1,15 @@
+export const districts = [
+    "Srikakulam",
+    "Vizianagaram",
+    "Visakhapatnam",
+    "East Godavari",
+    "West Godavari",
+    "Krishna",
+    "Guntur",
+    "Prakasam",
+    "Nellore",
+    "Kadapa",
+    "Anantapur",
+    "Chittoor",
+    "Kurnool",
+]
