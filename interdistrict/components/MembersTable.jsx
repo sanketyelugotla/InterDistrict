@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Phone, MapPin, Building, Download, Search, X } from "lucide-react"
+import { Phone, MapPin, Building, Download, Search, X, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useMemo } from "react"
 
@@ -41,7 +41,15 @@ const buttonVariants = {
     tap: { scale: 0.98 }
 }
 
-export default function MembersTable({ members, loading }) {
+export default function MembersTable({
+    members,           // Current page members
+    allMembers,        // Add this prop - all members in the dataset
+    loading,
+    currentPage,
+    totalPages,
+    totalMembers,
+    onPageChange
+}) {
     const [searchQuery, setSearchQuery] = useState("")
 
     // Filter members based on search query across all fields
@@ -60,10 +68,27 @@ export default function MembersTable({ members, loading }) {
         )
     }, [members, searchQuery])
 
+    // Filter all members for export when search is active
+    const filteredAllMembers = useMemo(() => {
+        if (!searchQuery) return allMembers
+
+        const query = searchQuery.toLowerCase().trim()
+        return allMembers.filter(member =>
+            member.name?.toLowerCase().includes(query) ||
+            member.designation?.toLowerCase().includes(query) ||
+            member.workingPlace?.toLowerCase().includes(query) ||
+            member.workingDistrict?.toLowerCase().includes(query) ||
+            member.willingDistrict?.toLowerCase().includes(query) ||
+            member.mobileNumber?.includes(query) ||
+            member.management?.toLowerCase().includes(query)
+        )
+    }, [allMembers, searchQuery])
+
     const downloadExcel = () => {
         import("xlsx")
             .then((XLSX) => {
-                const exportData = filteredMembers.map((member) => ({
+                // Use filteredAllMembers for export (all data matching search)
+                const exportData = filteredAllMembers.map((member) => ({
                     Name: member.name,
                     Designation: member.designation,
                     "Working Place": member.workingPlace,
@@ -102,6 +127,56 @@ export default function MembersTable({ members, loading }) {
 
     const clearSearch = () => setSearchQuery("")
 
+    // Generate page numbers for pagination
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+
+        if (totalPages <= maxVisiblePages) {
+            // Show all pages if total pages is less than max visible
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Always include first page
+            pages.push(1);
+
+            // Calculate start and end of visible page range
+            let startPage = Math.max(2, currentPage - 1);
+            let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+            // Adjust if we're at the beginning
+            if (currentPage <= 3) {
+                endPage = 4;
+            }
+
+            // Adjust if we're at the end
+            if (currentPage >= totalPages - 2) {
+                startPage = totalPages - 3;
+            }
+
+            // Add ellipsis after first page if needed
+            if (startPage > 2) {
+                pages.push('...');
+            }
+
+            // Add page numbers in range
+            for (let i = startPage; i <= endPage; i++) {
+                pages.push(i);
+            }
+
+            // Add ellipsis before last page if needed
+            if (endPage < totalPages - 1) {
+                pages.push('...');
+            }
+
+            // Always include last page
+            pages.push(totalPages);
+        }
+
+        return pages;
+    };
+
     if (loading) {
         return (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
@@ -126,7 +201,7 @@ export default function MembersTable({ members, loading }) {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <CardTitle className="flex items-center gap-2">
                             <Building className="w-5 h-5" />
-                            Members Directory ({filteredMembers.length} found)
+                            Members Directory ({totalMembers} total, {filteredMembers.length} on this page)
                         </CardTitle>
 
                         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -139,7 +214,6 @@ export default function MembersTable({ members, loading }) {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-10 pr-10 rounded-full bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-gray-600"
                                 />
-
 
                                 {searchQuery && (
                                     <button
@@ -291,6 +365,69 @@ export default function MembersTable({ members, loading }) {
                                         ))}
                                     </motion.tbody>
                                 </Table>
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-between mt-6 px-2">
+                                        <div className="text-sm text-muted-foreground">
+                                            Page {currentPage} of {totalPages}
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onPageChange(1)}
+                                                disabled={currentPage === 1}
+                                            >
+                                                <ChevronsLeft className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onPageChange(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </Button>
+
+                                            <div className="flex items-center space-x-1">
+                                                {getPageNumbers().map((pageNum, index) => (
+                                                    pageNum === '...' ? (
+                                                        <span key={`ellipsis-${index}`} className="px-2 py-1">
+                                                            ...
+                                                        </span>
+                                                    ) : (
+                                                        <Button
+                                                            key={`page-${pageNum}`}
+                                                            variant={currentPage === pageNum ? "default" : "outline"}
+                                                            size="sm"
+                                                            onClick={() => onPageChange(pageNum)}
+                                                        >
+                                                            {pageNum}
+                                                        </Button>
+                                                    )
+                                                ))}
+                                            </div>
+
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onPageChange(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                            >
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onPageChange(totalPages)}
+                                                disabled={currentPage === totalPages}
+                                            >
+                                                <ChevronsRight className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>

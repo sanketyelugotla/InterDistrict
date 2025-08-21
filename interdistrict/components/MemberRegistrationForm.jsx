@@ -30,6 +30,18 @@ const buttonVariants = {
     tap: { scale: 0.98 }
 }
 
+const dialogVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: { duration: 0.2 }
+    },
+    exit: {
+        opacity: 0,
+        transition: { duration: 0.15 }
+    }
+}
+
 export default function MemberRegistrationForm({ onMemberAdded }) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -111,146 +123,157 @@ export default function MemberRegistrationForm({ onMemberAdded }) {
                     </Button>
                 </motion.div>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+            <AnimatePresence>
+                {open && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1, duration: 0.2 }}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={dialogVariants}
                     >
-                        <DialogTitle>Register Your Details</DialogTitle>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1, duration: 0.2 }}
+                                >
+                                    <DialogTitle>Register Your Details</DialogTitle>
+                                </motion.div>
+                            </DialogHeader>
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <motion.form
+                                        onSubmit={handleSubmit}
+                                        className="space-y-4"
+                                        initial="hidden"
+                                        animate="visible"
+                                        transition={{ staggerChildren: 0.05 }}
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <motion.div className="space-y-2" variants={formItemVariants}>
+                                                <Label htmlFor="name">Name *</Label>
+                                                <Input
+                                                    id="name"
+                                                    value={formData.name}
+                                                    onChange={(e) => handleInputChange("name", e.target.value)}
+                                                    required
+                                                />
+                                            </motion.div>
+
+                                            <motion.div className="space-y-2" variants={formItemVariants}>
+                                                <Label htmlFor="designation">Designation *</Label>
+                                                <Input
+                                                    id="designation"
+                                                    value={formData.designation}
+                                                    onChange={(e) => handleInputChange("designation", e.target.value)}
+                                                    required
+                                                />
+                                            </motion.div>
+
+                                            <motion.div className="space-y-2" variants={formItemVariants}>
+                                                <Label htmlFor="workingPlace">Working Place *</Label>
+                                                <Input
+                                                    id="workingPlace"
+                                                    value={formData.workingPlace}
+                                                    onChange={(e) => handleInputChange("workingPlace", e.target.value)}
+                                                    required
+                                                />
+                                            </motion.div>
+
+                                            <motion.div className="space-y-2" variants={formItemVariants}>
+                                                <Label htmlFor="workingDistrict">Working District *</Label>
+                                                <Select
+                                                    value={formData.workingDistrict}
+                                                    onValueChange={(value) => handleInputChange("workingDistrict", value)}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select working district" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {districts.map((district) => (
+                                                            <SelectItem key={district} value={district}>
+                                                                {district}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </motion.div>
+
+                                            <motion.div className="space-y-2" variants={formItemVariants}>
+                                                <Label htmlFor="willingDistrict">Willing/Required District *</Label>
+                                                <Select
+                                                    value={formData.willingDistrict}
+                                                    onValueChange={(value) => handleInputChange("willingDistrict", value)}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select willing district" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {districts.map((district) => (
+                                                            <SelectItem key={district} value={district}>
+                                                                {district}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </motion.div>
+
+                                            <motion.div className="space-y-2" variants={formItemVariants}>
+                                                <Label htmlFor="mobileNumber">Mobile Number *</Label>
+                                                <Input
+                                                    id="mobileNumber"
+                                                    type="tel"
+                                                    value={formData.mobileNumber}
+                                                    onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
+                                                    required
+                                                />
+                                            </motion.div>
+
+                                            <motion.div className="space-y-2 md:col-span-2" variants={formItemVariants}>
+                                                <Label htmlFor="management">Management *</Label>
+                                                <Input
+                                                    id="management"
+                                                    value={formData.management}
+                                                    onChange={(e) => handleInputChange("management", e.target.value)}
+                                                    required
+                                                />
+                                            </motion.div>
+                                        </div>
+
+                                        <motion.div
+                                            className="flex gap-4 pt-4"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.3, duration: 0.2 }}
+                                        >
+                                            <motion.div
+                                                variants={buttonVariants}
+                                                whileHover="hover"
+                                                whileTap="tap"
+                                                className="flex-1"
+                                            >
+                                                <Button type="submit" disabled={loading} className="w-full">
+                                                    {loading ? "Registering..." : "Register Details"}
+                                                </Button>
+                                            </motion.div>
+                                            <motion.div
+                                                variants={buttonVariants}
+                                                whileHover="hover"
+                                                whileTap="tap"
+                                            >
+                                                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                                                    Cancel
+                                                </Button>
+                                            </motion.div>
+                                        </motion.div>
+                                    </motion.form>
+                                </CardContent>
+                            </Card>
+                        </DialogContent>
                     </motion.div>
-                </DialogHeader>
-                <Card>
-                    <CardContent className="pt-6">
-                        <motion.form
-                            onSubmit={handleSubmit}
-                            className="space-y-4"
-                            initial="hidden"
-                            animate="visible"
-                            transition={{ staggerChildren: 0.05 }}
-                        >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <motion.div className="space-y-2" variants={formItemVariants}>
-                                    <Label htmlFor="name">Name *</Label>
-                                    <Input
-                                        id="name"
-                                        value={formData.name}
-                                        onChange={(e) => handleInputChange("name", e.target.value)}
-                                        required
-                                    />
-                                </motion.div>
-
-                                <motion.div className="space-y-2" variants={formItemVariants}>
-                                    <Label htmlFor="designation">Designation *</Label>
-                                    <Input
-                                        id="designation"
-                                        value={formData.designation}
-                                        onChange={(e) => handleInputChange("designation", e.target.value)}
-                                        required
-                                    />
-                                </motion.div>
-
-                                <motion.div className="space-y-2" variants={formItemVariants}>
-                                    <Label htmlFor="workingPlace">Working Place *</Label>
-                                    <Input
-                                        id="workingPlace"
-                                        value={formData.workingPlace}
-                                        onChange={(e) => handleInputChange("workingPlace", e.target.value)}
-                                        required
-                                    />
-                                </motion.div>
-
-                                <motion.div className="space-y-2" variants={formItemVariants}>
-                                    <Label htmlFor="workingDistrict">Working District *</Label>
-                                    <Select
-                                        value={formData.workingDistrict}
-                                        onValueChange={(value) => handleInputChange("workingDistrict", value)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select working district" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {districts.map((district) => (
-                                                <SelectItem key={district} value={district}>
-                                                    {district}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </motion.div>
-
-                                <motion.div className="space-y-2" variants={formItemVariants}>
-                                    <Label htmlFor="willingDistrict">Willing/Required District *</Label>
-                                    <Select
-                                        value={formData.willingDistrict}
-                                        onValueChange={(value) => handleInputChange("willingDistrict", value)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select willing district" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {districts.map((district) => (
-                                                <SelectItem key={district} value={district}>
-                                                    {district}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </motion.div>
-
-                                <motion.div className="space-y-2" variants={formItemVariants}>
-                                    <Label htmlFor="mobileNumber">Mobile Number *</Label>
-                                    <Input
-                                        id="mobileNumber"
-                                        type="tel"
-                                        value={formData.mobileNumber}
-                                        onChange={(e) => handleInputChange("mobileNumber", e.target.value)}
-                                        required
-                                    />
-                                </motion.div>
-
-                                <motion.div className="space-y-2 md:col-span-2" variants={formItemVariants}>
-                                    <Label htmlFor="management">Management *</Label>
-                                    <Input
-                                        id="management"
-                                        value={formData.management}
-                                        onChange={(e) => handleInputChange("management", e.target.value)}
-                                        required
-                                    />
-                                </motion.div>
-                            </div>
-
-                            <motion.div
-                                className="flex gap-4 pt-4"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3, duration: 0.2 }}
-                            >
-                                <motion.div
-                                    variants={buttonVariants}
-                                    whileHover="hover"
-                                    whileTap="tap"
-                                    className="flex-1"
-                                >
-                                    <Button type="submit" disabled={loading} className="w-full">
-                                        {loading ? "Registering..." : "Register Details"}
-                                    </Button>
-                                </motion.div>
-                                <motion.div
-                                    variants={buttonVariants}
-                                    whileHover="hover"
-                                    whileTap="tap"
-                                >
-                                    <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                                        Cancel
-                                    </Button>
-                                </motion.div>
-                            </motion.div>
-                        </motion.form>
-                    </CardContent>
-                </Card>
-            </DialogContent>
+                )}
+            </AnimatePresence>
         </Dialog>
     )
 }

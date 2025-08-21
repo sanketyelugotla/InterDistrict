@@ -51,21 +51,36 @@ const cardVariants = {
 export default function Home() {
   const [workingDistrict, setWorkingDistrict] = useState("all")
   const [willingDistrict, setWillingDistrict] = useState("all")
-  const [members, setMembers] = useState([])
+  const [members, setMembers] = useState([]) // Paginated members
+  const [allMembers, setAllMembers] = useState([]) // All members for export
   const [loading, setLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalMembers, setTotalMembers] = useState(0)
 
-  const fetchMembers = async () => {
+  // Fetch paginated members for display
+  const fetchMembers = async (page = 1) => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       if (workingDistrict !== "all") params.append("workingDistrict", workingDistrict)
       if (willingDistrict !== "all") params.append("willingDistrict", willingDistrict)
+      params.append("page", page.toString())
+      params.append("limit", "20") // 20 items per page
 
-      const response = await fetch(`/api/members?${params.toString()}`)
+      const response = await fetch(`/api/members?${params.toString()}`, {
+        headers: {
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET,
+        },
+      })
+
       const result = await response.json()
 
       if (result.success) {
         setMembers(result.data)
+        setTotalPages(result.pagination.totalPages)
+        setTotalMembers(result.pagination.total)
+        setCurrentPage(result.pagination.page)
       }
     } catch (error) {
       console.error("Error fetching members:", error)
@@ -74,13 +89,48 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    fetchMembers()
-  }, [])
+  // Fetch all members for export (without pagination)
+  const fetchAllMembers = async () => {
+    try {
+      const params = new URLSearchParams()
+      if (workingDistrict !== "all") params.append("workingDistrict", workingDistrict)
+      if (willingDistrict !== "all") params.append("willingDistrict", willingDistrict)
+
+      const response = await fetch(`/api/members?${params.toString()}`, {
+        headers: {
+          "x-api-key": process.env.NEXT_PUBLIC_API_SECRET,
+        },
+      })
+
+      const result = await response.json()
+      console.log(result)
+
+      if (result.success) {
+        setAllMembers(result.data)
+      }
+    } catch (error) {
+      console.error("Error fetching all members:", error)
+    }
+  }
 
   const handleSearch = () => {
-    fetchMembers()
+    setCurrentPage(1)
+    fetchMembers(1)
+    fetchAllMembers() // Also fetch all members for export
   }
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage)
+      fetchMembers(newPage)
+    }
+  }
+
+  // Fetch all members when component mounts
+  useEffect(() => {
+    fetchMembers(1)
+    fetchAllMembers()
+  }, [])
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -183,7 +233,10 @@ export default function Home() {
                   {loading ? "Searching..." : "Search Members"}
                 </Button>
 
-                <MemberRegistrationForm onMemberAdded={fetchMembers} />
+                <MemberRegistrationForm onMemberAdded={() => {
+                  fetchMembers(currentPage)
+                  fetchAllMembers()
+                }} />
               </motion.div>
             </CardContent>
           </Card>
@@ -198,7 +251,15 @@ export default function Home() {
             exit={{ opacity: 0, y: -10 }} // Reduced from y: -20
             transition={{ duration: 0.25, ease: "easeOut" }} // Reduced from 0.4
           >
-            <MembersTable members={members} loading={loading} />
+            <MembersTable
+              allMembers={allMembers} // Pass all members for export
+              members={members} // Pass paginated members for display
+              loading={loading}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalMembers={totalMembers}
+              onPageChange={handlePageChange}
+            />
           </motion.div>
         </AnimatePresence>
       </div>
