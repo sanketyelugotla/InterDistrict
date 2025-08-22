@@ -1,5 +1,3 @@
-"use client"
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +8,7 @@ import { Phone, MapPin, Building, Download, Search, X, ChevronLeft, ChevronRight
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useMemo } from "react"
 
-// Animation variants
+// Animation variants (unchanged)
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -43,8 +41,8 @@ const buttonVariants = {
 }
 
 export default function MembersTable({
-    members,           // Current page members
-    allMembers,        // All members in the dataset
+    members,
+    allMembers,
     loading,
     currentPage,
     totalPages,
@@ -55,7 +53,7 @@ export default function MembersTable({
     const [designationFilter, setDesignationFilter] = useState(undefined)
     const [managementFilter, setManagementFilter] = useState(undefined)
 
-    // Get unique designations and managements for filter options
+    // Memoized data (unchanged)
     const designations = useMemo(() => {
         const uniqueDesignations = new Set(allMembers.map(member => member.designation).filter(Boolean))
         return Array.from(uniqueDesignations).sort()
@@ -66,10 +64,8 @@ export default function MembersTable({
         return Array.from(uniqueManagements).sort()
     }, [allMembers])
 
-    // Filter members based on search query and filters
     const filteredMembers = useMemo(() => {
         let filtered = members
-
         if (searchQuery) {
             const query = searchQuery.toLowerCase().trim()
             filtered = filtered.filter(member =>
@@ -82,22 +78,17 @@ export default function MembersTable({
                 member.management?.toLowerCase().includes(query)
             )
         }
-
         if (designationFilter) {
             filtered = filtered.filter(member => member.designation === designationFilter)
         }
-
         if (managementFilter) {
             filtered = filtered.filter(member => member.management === managementFilter)
         }
-
         return filtered
     }, [members, searchQuery, designationFilter, managementFilter])
 
-    // Filter all members for export when search or filters are active
     const filteredAllMembers = useMemo(() => {
         let filtered = allMembers
-
         if (searchQuery) {
             const query = searchQuery.toLowerCase().trim()
             filtered = filtered.filter(member =>
@@ -110,15 +101,12 @@ export default function MembersTable({
                 member.management?.toLowerCase().includes(query)
             )
         }
-
         if (designationFilter) {
             filtered = filtered.filter(member => member.designation === designationFilter)
         }
-
         if (managementFilter) {
             filtered = filtered.filter(member => member.management === managementFilter)
         }
-
         return filtered
     }, [allMembers, searchQuery, designationFilter, managementFilter])
 
@@ -134,26 +122,21 @@ export default function MembersTable({
                     "Mobile Number": member.mobileNumber,
                     Management: member.management,
                 }))
-
                 const wb = XLSX.utils.book_new()
                 const ws = XLSX.utils.json_to_sheet(exportData)
-
                 const colWidths = [
-                    { wch: 20 }, // Name
-                    { wch: 15 }, // Designation
-                    { wch: 25 }, // Working Place
-                    { wch: 18 }, // Working District
-                    { wch: 18 }, // Willing District
-                    { wch: 15 }, // Mobile Number
-                    { wch: 15 }, // Management
+                    { wch: 20 },
+                    { wch: 15 },
+                    { wch: 25 },
+                    { wch: 18 },
+                    { wch: 18 },
+                    { wch: 15 },
+                    { wch: 15 },
                 ]
                 ws["!cols"] = colWidths
-
                 XLSX.utils.book_append_sheet(wb, ws, "Members Directory")
-
                 const date = new Date().toISOString().split("T")[0]
                 const filename = `Members_Directory_${date}.xlsx`
-
                 XLSX.writeFile(wb, filename)
             })
             .catch((error) => {
@@ -168,56 +151,36 @@ export default function MembersTable({
         setManagementFilter(undefined)
     }
 
-    // Check if any filters are active
     const hasActiveFilters = searchQuery || designationFilter || managementFilter
 
-    // Generate page numbers for pagination
     const getPageNumbers = () => {
         const pages = [];
         const maxVisiblePages = 5;
-
         if (totalPages <= maxVisiblePages) {
-            // Show all pages if total pages is less than max visible
             for (let i = 1; i <= totalPages; i++) {
                 pages.push(i);
             }
         } else {
-            // Always include first page
             pages.push(1);
-
-            // Calculate start and end of visible page range
             let startPage = Math.max(2, currentPage - 1);
             let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-            // Adjust if we're at the beginning
             if (currentPage <= 3) {
                 endPage = 4;
             }
-
-            // Adjust if we're at the end
             if (currentPage >= totalPages - 2) {
                 startPage = totalPages - 3;
             }
-
-            // Add ellipsis after first page if needed
             if (startPage > 2) {
                 pages.push('...');
             }
-
-            // Add page numbers in range
             for (let i = startPage; i <= endPage; i++) {
                 pages.push(i);
             }
-
-            // Add ellipsis before last page if needed
             if (endPage < totalPages - 1) {
                 pages.push('...');
             }
-
-            // Always include last page
             pages.push(totalPages);
         }
-
         return pages;
     };
 
@@ -240,32 +203,33 @@ export default function MembersTable({
 
     return (
         <motion.div variants={cardVariants} initial="hidden" animate="visible" key={members.length}>
-            <Card>
-                <CardHeader>
+            <Card className="border-none shadow-lg">
+                <CardHeader className="pb-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <CardTitle className="flex items-center gap-2">
-                            <Building className="w-5 h-5" />
+                        <CardTitle className="flex items-center gap-2 text-2xl font-semibold text-gray-800">
+                            <Building className="w-6 h-6 text-primary" />
                             Members Directory ({totalMembers} total, {filteredMembers.length} on this page)
                         </CardTitle>
 
                         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                            {/* 🔍 Enhanced Search Input */}
+                            {/* Enhanced Search Input */}
                             <div className="relative flex-1 max-w-md">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black pointer-events-none" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                                 <Input
                                     placeholder="Search members..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10 pr-10 rounded-full bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all placeholder:text-gray-600"
+                                    className="pl-10 pr-10 py-2 rounded-full bg-white border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm transition-all duration-200 placeholder:text-gray-400 text-gray-800"
                                 />
-
                                 {searchQuery && (
-                                    <button
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
                                         onClick={() => setSearchQuery("")}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                                     >
-                                        <X className="h-4 w-4" />
-                                    </button>
+                                        <X className="h-5 w-5" />
+                                    </motion.button>
                                 )}
                             </div>
 
@@ -279,7 +243,7 @@ export default function MembersTable({
                                     <Button
                                         onClick={downloadExcel}
                                         variant="outline"
-                                        className="flex items-center gap-2 bg-transparent whitespace-nowrap w-full sm:w-auto"
+                                        className="flex items-center gap-2 bg-white border-gray-200 text-gray-800 font-medium rounded-full px-4 py-2 shadow-sm transition-all duration-200"
                                     >
                                         <Download className="w-4 h-4" />
                                         Export Excel
@@ -290,21 +254,21 @@ export default function MembersTable({
                     </div>
 
                     {/* Filter Controls */}
-                    <div className="flex flex-col sm:flex-row gap-4 mt-4 items-start">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Filter className="h-4 w-4" />
-                            <span>Filter by:</span>
+                    <div className="flex flex-col sm:flex-row gap-4 mt-4 items-center">
+                        <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                            <Filter className="h-4 w-4 text-primary" />
+                            <span>Filters</span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
                             <Select value={designationFilter} onValueChange={setDesignationFilter}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Designation" />
+                                <SelectTrigger className="w-full bg-white border border-gray-400 rounded-lg py-2 px-4 text-gray-800 focus:ring-2 focus:ring-primary/20 shadow-sm transition-all duration-200 data-[placeholder]:text-gray-600">
+                                    <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={undefined}>All Designations</SelectItem>
+                                <SelectContent className="bg-white border-gray-200 shadow-lg rounded-lg">
+                                    <SelectItem value={undefined} className="text-gray-800 hover:bg-gray-50">All Designations</SelectItem>
                                     {designations.map((designation) => (
-                                        <SelectItem key={designation} value={designation}>
+                                        <SelectItem key={designation} value={designation} className="text-gray-800 hover:bg-gray-50">
                                             {designation}
                                         </SelectItem>
                                     ))}
@@ -312,13 +276,13 @@ export default function MembersTable({
                             </Select>
 
                             <Select value={managementFilter} onValueChange={setManagementFilter}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Management" className="placeholder:text-gray-600"/>
+                                <SelectTrigger className="w-full bg-white border border-gray-400 rounded-lg py-2 px-4 text-gray-800 focus:ring-2 focus:ring-primary/20 shadow-sm transition-all duration-200 data-[placeholder]:text-gray-600">
+                                    <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={undefined}>All Managements</SelectItem>
+                                <SelectContent className="bg-white border-gray-200 shadow-lg rounded-lg">
+                                    <SelectItem value={undefined} className="text-gray-800 hover:bg-gray-50">All Managements</SelectItem>
                                     {managements.map((management) => (
-                                        <SelectItem key={management} value={management}>
+                                        <SelectItem key={management} value={management} className="text-gray-800 hover:bg-gray-50">
                                             {management}
                                         </SelectItem>
                                     ))}
@@ -326,14 +290,19 @@ export default function MembersTable({
                             </Select>
 
                             {hasActiveFilters && (
-                                <Button
-                                    variant="outline"
-                                    onClick={clearAllFilters}
-                                    className="flex items-center gap-2"
+                                <motion.div
+                                    whileHover={{ scale: 1.03 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
-                                    <X className="h-4 w-4" />
-                                    Clear Filters
-                                </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={clearAllFilters}
+                                        className="flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50 text-gray-800 font-medium rounded-full px-4 py-2 shadow-sm transition-all duration-200"
+                                    >
+                                        <X className="h-4 w-4" />
+                                        Clear Filters
+                                    </Button>
+                                </motion.div>
                             )}
                         </div>
                     </div>
@@ -351,27 +320,27 @@ export default function MembersTable({
                             >
                                 {hasActiveFilters ? (
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
-                                            <Search className="h-6 w-6" />
+                                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100">
+                                            <Search className="h-6 w-6 text-gray-500" />
                                         </div>
-                                        <p className="font-medium">No matches found</p>
-                                        <p className="text-sm">No members match your filters</p>
+                                        <p className="font-medium text-gray-800">No matches found</p>
+                                        <p className="text-sm text-gray-500">No members match your filters</p>
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={clearAllFilters}
-                                            className="mt-2"
+                                            className="mt-2 bg-white border-gray-200 hover:bg-gray-50 text-gray-800 rounded-full"
                                         >
                                             Clear all filters
                                         </Button>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-3">
-                                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
-                                            <Building className="h-6 w-6" />
+                                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100">
+                                            <Building className="h-6 w-6 text-gray-500" />
                                         </div>
-                                        <p className="font-medium">No members found</p>
-                                        <p className="text-sm">Try adjusting your search filters</p>
+                                        <p className="font-medium text-gray-800">No members found</p>
+                                        <p className="text-sm text-gray-500">Try adjusting your search filters</p>
                                     </div>
                                 )}
                             </motion.div>
@@ -389,53 +358,71 @@ export default function MembersTable({
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-lg gap-2"
+                                        className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-xl gap-2"
                                     >
-                                        <div className="flex flex-wrap items-center gap-2 text-sm">
-                                            <Filter className="h-4 w-4 text-muted-foreground" />
-                                            <span>Active filters:</span>
-
+                                        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                                            <Filter className="h-4 w-4 text-primary" />
+                                            <span className="font-medium">Active filters:</span>
                                             {searchQuery && (
-                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                <Badge variant="secondary" className="bg-primary/10 text-primary font-medium py-1 px-2 rounded-full flex items-center gap-1">
                                                     Search: {searchQuery}
-                                                    <X
-                                                        className="h-3 w-3 cursor-pointer"
-                                                        onClick={() => setSearchQuery("")}
-                                                    />
+                                                    <motion.div
+                                                        whileHover={{ scale: 1.2 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                    >
+                                                        <X
+                                                            className="h-4 w-4 cursor-pointer text-primary/60 hover:text-primary"
+                                                            onClick={() => setSearchQuery("")}
+                                                        />
+                                                    </motion.div>
                                                 </Badge>
                                             )}
-
                                             {designationFilter && (
-                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                <Badge variant="secondary" className="bg-primary/10 text-primary font-medium py-1 px-2 rounded-full flex items-center gap-1">
                                                     Designation: {designationFilter}
-                                                    <X
-                                                        className="h-3 w-3 cursor-pointer"
-                                                        onClick={() => setDesignationFilter(undefined)}
-                                                    />
+                                                    <motion.div
+                                                        whileHover={{ scale: 1.2 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                    >
+                                                        <X
+                                                            className="h-4 w-4 cursor-pointer text-primary/60 hover:text-primary"
+                                                            onClick={() => setDesignationFilter(undefined)}
+                                                        />
+                                                    </motion.div>
                                                 </Badge>
                                             )}
-
                                             {managementFilter && (
-                                                <Badge variant="secondary" className="flex items-center gap-1">
+                                                <Badge variant="secondary" className="bg-primary/10 text-primary font-medium py-1 px-2 rounded-full flex items-center gap-1">
                                                     Management: {managementFilter}
-                                                    <X
-                                                        className="h-3 w-3 cursor-pointer"
-                                                        onClick={() => setManagementFilter(undefined)}
-                                                    />
+                                                    <motion.div
+                                                        whileHover={{ scale: 1.2 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                    >
+                                                        <X
+                                                            className="h-4 w-4 cursor-pointer text-primary/60 hover:text-primary"
+                                                            onClick={() => setManagementFilter(undefined)}
+                                                        />
+                                                    </motion.div>
                                                 </Badge>
                                             )}
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={clearAllFilters}
-                                            className="h-8 px-2 self-end sm:self-auto"
+                                        <motion.div
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.98 }}
                                         >
-                                            Clear all
-                                        </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={clearAllFilters}
+                                                className="h-8 px-3 text-primary hover:bg-primary/10 rounded-full"
+                                            >
+                                                Clear all
+                                            </Button>
+                                        </motion.div>
                                     </motion.div>
                                 )}
 
+                                {/* Table and Pagination (unchanged) */}
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -487,7 +474,6 @@ export default function MembersTable({
                                     </motion.tbody>
                                 </Table>
 
-                                {/* Pagination Controls */}
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-between mt-6 px-2">
                                         <div className="text-sm text-muted-foreground">
@@ -510,7 +496,6 @@ export default function MembersTable({
                                             >
                                                 <ChevronLeft className="h-4 w-4" />
                                             </Button>
-
                                             <div className="flex items-center space-x-1">
                                                 {getPageNumbers().map((pageNum, index) => (
                                                     pageNum === '...' ? (
@@ -529,7 +514,6 @@ export default function MembersTable({
                                                     )
                                                 ))}
                                             </div>
-
                                             <Button
                                                 variant="outline"
                                                 size="sm"

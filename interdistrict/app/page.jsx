@@ -186,7 +186,7 @@ export default function Home() {
                 <motion.div className="space-y-2" variants={itemVariants}>
                   <Label htmlFor="working-district">Your Working District</Label>
                   <Select value={workingDistrict} onValueChange={setWorkingDistrict}>
-                    <SelectTrigger id="working-district" className="bg-input">
+                    <SelectTrigger id="working-district" className="bg-input border-2 border-grey-600 pl-2 pr-[10rem]">
                       <SelectValue placeholder="Select working district" />
                     </SelectTrigger>
                     <SelectContent>
@@ -203,7 +203,7 @@ export default function Home() {
                 <motion.div className="space-y-2" variants={itemVariants}>
                   <Label htmlFor="willing-district">Your Required/Willing District</Label>
                   <Select value={willingDistrict} onValueChange={setWillingDistrict}>
-                    <SelectTrigger id="willing-district" className="bg-input">
+                    <SelectTrigger id="willing-district" className="bg-input border-2 border-grey-600 pl-2 pr-[10rem]">
                       <SelectValue placeholder="Select required district" />
                     </SelectTrigger>
                     <SelectContent>
